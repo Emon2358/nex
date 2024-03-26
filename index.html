@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discordメッセージ送信</title>
+</head>
+<body>
+    <!-- メッセージを表示する要素 -->
+    <div id="messageId"></div>
+
+    <!-- フォーム -->
+    <form id="messageForm">
+        <label for="channelId">チャンネルID：</label><br>
+        <textarea id="channelId" name="channelId" rows="4" cols="50" placeholder="発言するチャンネルのIDを改行で区切って入力"></textarea><br><br>
+        
+        <label for="token">トークン：</label><br>
+        <textarea id="token" name="token" rows="4" cols="50" placeholder="トークンを改行で区切って入力"></textarea><br><br>
+        
+        <label for="content">発言内容：</label><br>
+        <textarea id="content" name="content" rows="4" cols="50" placeholder="発言する内容を入力"></textarea><br><br>
+        
+        <label for="random">ランダムな文字を追加：</label>
+        <input type="checkbox" id="random" name="random"><br><br>
+        
+        <input type="submit" value="送信">
+    </form>
+
+    <script>
+        document.getElementById("messageForm").addEventListener("submit", function(event) {
+            event.preventDefault(); // フォームのデフォルトの送信を防止
+            
+            var channelId = document.getElementById("channelId").value;
+            var token = document.getElementById("token").value;
+            var content = document.getElementById("content").value;
+            var randomize = document.getElementById("random").checked;
+
+            // メッセージを送信する関数
+            function sendMessage(channelId, token, content, randomize) {
+                // メッセージの送信
+                fetch("https://discord.com/api/v8/channels/" + channelId + "/messages", {
+                    method: "POST",
+                    headers: {
+                        "Authorization": token,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        content: content + (randomize ? String.fromCharCode(Math.random() * Math.pow(2, 16)) : ""),
+                        tts: false
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    showMessage("MESSAGE#" + data.status + "@" + token);
+                })
+                .catch(error => {
+                    showMessage("ERROR: " + error.message);
+                });
+            }
+
+            // メッセージ送信を実行
+            splitLine(channelId).forEach(function(channelId) {
+                splitLine(token).forEach(function(token) {
+                    sendMessage(channelId, token, content, randomize);
+                });
+            });
+        });
+
+        // メッセージを表示する関数
+        function showMessage(message) {
+            var messageElement = document.getElementById("messageId");
+            messageElement.innerHTML = message;
+        }
+    </script>
+</body>
+</html>
